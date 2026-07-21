@@ -136,38 +136,46 @@ public class TelaLogin extends javax.swing.JFrame {
 
     private void EntrarbtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_EntrarbtnActionPerformed
         // TODO add your handling code here:
-        String usuario = Usuariotxt.getText();
-        String senha = new String(Senhapassword.getPassword());
-
-        if (usuario.equals("admin") && senha.equals("1234")) {
-
-        Dashboard dashboard = new Dashboard();
-        dashboard.setVisible(true);
-
-        this.dispose();
-
+       // 1. Captura o que o usuário digitou (Substitua pelos nomes corretos dos seus JTextFields)
+        // 1. Captura os dados usando os nomes reais dos componentes da sua tela
+        String loginDigitado = Usuariotxt.getText().trim();
+        String senhaDigitada = new String(Senhapassword.getPassword());
+        
+        // 2. Validação simples de campos vazios
+        if (loginDigitado.isEmpty() || senhaDigitada.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, preencha todos os campos!", "Aviso", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // 3. Consulta o banco de dados através do Controller
+        Controller.UsuarioController controller = new Controller.UsuarioController();
+        Model.Usuario usuarioLogado = controller.autenticar(loginDigitado, senhaDigitada);
+        
+        // 4. Validação das credenciais retornadas pelo MySQL
+        if (usuarioLogado != null) {
+            // Guarda o perfil do usuário ativo na variável estática do seu Dashboard
+            Telas.Dashboard.perfilLogado = usuarioLogado.getPerfil();
+            
+            // Abre a tela principal do seu sistema
+            Telas.Dashboard principal = new Telas.Dashboard();
+            principal.setVisible(true);
+            
+            // Fecha esta janela de Login atual de forma segura
+            this.dispose();
+            
         } else {
-
-            javax.swing.JOptionPane.showMessageDialog(
-                    this,
-                    "Usuário ou senha inválidos!",
-                    "Erro",
-                    javax.swing.JOptionPane.ERROR_MESSAGE);
-
-            Usuariotxt.setText("");
-            Senhapassword.setText("");
-
-            Usuariotxt.requestFocus();
+            javax.swing.JOptionPane.showMessageDialog(this, "Usuário ou senha incorretos!", "Erro de Autenticação", javax.swing.JOptionPane.ERROR_MESSAGE);
         }
                     
     }//GEN-LAST:event_EntrarbtnActionPerformed
 
     private void MostrarSenhacheckboxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_MostrarSenhacheckboxActionPerformed
         // TODO add your handling code here:
+        // Lógica para alternar a visibilidade dos caracteres da senha
         if (MostrarSenhacheckbox.isSelected()) {
-            Senhapassword.setEchoChar((char) 0);
+            Senhapassword.setEchoChar((char) 0); // Mostra o texto limpo
         } else {
-            Senhapassword.setEchoChar('*');
+            Senhapassword.setEchoChar('•'); // Oculta com bolinhas
         }
 
     }//GEN-LAST:event_MostrarSenhacheckboxActionPerformed

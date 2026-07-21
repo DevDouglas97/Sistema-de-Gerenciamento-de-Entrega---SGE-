@@ -9,6 +9,7 @@ import Model.Endereco;
 import java.util.ArrayList;
 import Telas.Dashboard;
 import javax.swing.SwingUtilities;
+import javax.swing.JOptionPane;
 
 
 /**
@@ -33,6 +34,7 @@ public class GerenciamentoEnderecos extends javax.swing.JPanel {
         
         for (Endereco endereco : listaEnderecos) {
             Object[] linha = new Object[]{
+                endereco.getId(),        // Coluna 0 (ID do Banco)
                 endereco.getCliente(),   // Coluna 1
                 endereco.getDescricao(), // Coluna 2
                 endereco.getEndereco(),  // Coluna 3
@@ -147,15 +149,22 @@ public class GerenciamentoEnderecos extends javax.swing.JPanel {
         Dashboard dashboard = (Dashboard) SwingUtilities.getWindowAncestor(this);
         
         if (linhaSelecionada == -1) {
-            // Nenhuma linha selecionada: Abre o formulário limpo
+            // Nenhuma linha selecionada: Abre formulário em branco
             dashboard.abrirPainel(new CadastroEnderecos());
         } else {
-            // Linha selecionada: Pega o endereço correspondente e abre em modo edição
-            EnderecoController controller = new EnderecoController();
-            Endereco enderecoSelecionado = controller.listar().get(linhaSelecionada);
+            // Pega o ID que está guardado na Coluna 0 da tabela
+            int idEndereco = (int) tableEnderecos.getValueAt(linhaSelecionada, 0);
             
-            dashboard.abrirPainel(new CadastroEnderecos(enderecoSelecionado));
+            EnderecoController controller = new EnderecoController();
+            Endereco enderecoSelecionado = controller.buscarPorId(idEndereco);
+            
+            if (enderecoSelecionado != null) {
+                dashboard.abrirPainel(new CadastroEnderecos(enderecoSelecionado));
+            } else {
+                JOptionPane.showMessageDialog(this, "Erro ao buscar detalhes do endereço.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
         }
+    
     }//GEN-LAST:event_btnCadastrarEditarEnderecoActionPerformed
 
     private void ExcluirEndereçobtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExcluirEndereçobtnActionPerformed
@@ -163,29 +172,43 @@ public class GerenciamentoEnderecos extends javax.swing.JPanel {
         int linhaSelecionada = tableEnderecos.getSelectedRow();
         
         if (linhaSelecionada == -1) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, selecione um endereço na tabela para excluir.");
+            JOptionPane.showMessageDialog(this, "Por favor, selecione um endereço na tabela para excluir.");
             return;
         }
         
-        int confirmacao = javax.swing.JOptionPane.showConfirmDialog(
+        int confirmacao = JOptionPane.showConfirmDialog(
             this, 
             "Tem certeza que deseja remover este endereço?", 
             "Confirmar Exclusão", 
-            javax.swing.JOptionPane.YES_NO_OPTION
+            JOptionPane.YES_NO_OPTION
         );
         
-        if (confirmacao == javax.swing.JOptionPane.YES_OPTION) {
-            EnderecoController controller = new EnderecoController();
-            controller.listar().remove(linhaSelecionada); // Remove pelo índice mapeado da tabela
-            
-            atualizarTabela(); // Recarrega os dados na tela
-            javax.swing.JOptionPane.showMessageDialog(this, "Endereço excluído com sucesso!");
+        if (confirmacao == JOptionPane.YES_OPTION) {
+            try {
+                // Obtém o ID real do banco na coluna 0
+                int idEndereco = (int) tableEnderecos.getValueAt(linhaSelecionada, 0);
+                
+                EnderecoController controller = new EnderecoController();
+                controller.excluir(idEndereco); // Chama o banco via DAO
+                
+                atualizarTabela(); // Recarrega do BD
+                JOptionPane.showMessageDialog(this, "Endereço excluído com sucesso!");
+                
+            } catch (RuntimeException e) {
+                JOptionPane.showMessageDialog(
+                    this, 
+                    "Não foi possível excluir o endereço.\nDetalhes: " + e.getMessage(), 
+                    "Erro ao Excluir", 
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
         }
+    
     }//GEN-LAST:event_ExcluirEndereçobtnActionPerformed
 
     private void PesquisarClientetxtKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_PesquisarClientetxtKeyReleased
         // TODO add your handling code here:
-        String termoBusca = PesquisarClientetxt.getText().toLowerCase().trim();
+       String termoBusca = PesquisarClientetxt.getText().toLowerCase().trim();
         DefaultTableModel modelo = (DefaultTableModel) tableEnderecos.getModel();
         modelo.setRowCount(0);
         
@@ -193,9 +216,9 @@ public class GerenciamentoEnderecos extends javax.swing.JPanel {
         ArrayList<Endereco> listaEnderecos = controller.listar();
         
         for (Endereco endereco : listaEnderecos) {
-            // Filtra se o nome do cliente associado ao endereço bater com a pesquisa
             if (termoBusca.isEmpty() || endereco.getCliente().toLowerCase().contains(termoBusca)) {
                 Object[] linha = new Object[]{
+                    endereco.getId(),
                     endereco.getCliente(),
                     endereco.getDescricao(),
                     endereco.getEndereco(),

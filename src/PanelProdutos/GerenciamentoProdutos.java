@@ -9,7 +9,7 @@ import Model.Produtos;
 import java.util.ArrayList;
 import Telas.Dashboard;
 import javax.swing.SwingUtilities;
-
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -27,13 +27,14 @@ public class GerenciamentoProdutos extends javax.swing.JPanel {
     
      public final void atualizarTabela() {
         DefaultTableModel modelo = (DefaultTableModel) tableProdutos.getModel();
-        modelo.setRowCount(0); // Limpa as linhas iniciais do componente
+        modelo.setRowCount(0); // Limpa as linhas anteriores
         
         ProdutosController controller = new ProdutosController();
         ArrayList<Produtos> listaProdutos = controller.listar();
         
         for (Produtos produto : listaProdutos) {
             Object[] linha = new Object[]{
+                produto.getId(),          // Coluna 0: ID (do Banco)
                 produto.getCliente(),     // Coluna 1: Cliente
                 produto.getNomeProduto(), // Coluna 2: Nome Produto
                 produto.getQuantidade(),  // Coluna 3: Qtd
@@ -43,7 +44,6 @@ public class GerenciamentoProdutos extends javax.swing.JPanel {
             modelo.addRow(linha);
         }
     }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -151,7 +151,7 @@ public class GerenciamentoProdutos extends javax.swing.JPanel {
 
     private void txtPesquisaClienteKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtPesquisaClienteKeyReleased
         // TODO add your handling code here:
-         String termoBusca = txtPesquisaCliente.getText().toLowerCase().trim();
+        String termoBusca = txtPesquisaCliente.getText().toLowerCase().trim();
         DefaultTableModel modelo = (DefaultTableModel) tableProdutos.getModel();
         modelo.setRowCount(0);
         
@@ -161,6 +161,7 @@ public class GerenciamentoProdutos extends javax.swing.JPanel {
         for (Produtos produto : listaProdutos) {
             if (termoBusca.isEmpty() || produto.getCliente().toLowerCase().contains(termoBusca)) {
                 Object[] linha = new Object[]{
+                    produto.getId(),
                     produto.getCliente(),
                     produto.getNomeProduto(),
                     produto.getQuantidade(),
@@ -174,18 +175,24 @@ public class GerenciamentoProdutos extends javax.swing.JPanel {
 
     private void btnCadastrarEditarProdutosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCadastrarEditarProdutosActionPerformed
         // TODO add your handling code here:
-         int linhaSelecionada = tableProdutos.getSelectedRow();
+        int linhaSelecionada = tableProdutos.getSelectedRow();
         Dashboard dashboard = (Dashboard) SwingUtilities.getWindowAncestor(this);
         
         if (linhaSelecionada == -1) {
-            // Nenhuma linha selecionada: Abre a tela limpa para novo produto
+            // Nenhuma linha selecionada: Abre o formulário limpo
             dashboard.abrirPainel(new CadastroProdutos());
         } else {
-            // Linha selecionada: Recupera o produto da memória ram e passa para a edição
-            ProdutosController controller = new ProdutosController();
-            Produtos produtoSelecionado = controller.listar().get(linhaSelecionada);
+            // Obtém o ID real da Coluna 0
+            int idProduto = (int) tableProdutos.getValueAt(linhaSelecionada, 0);
             
-            dashboard.abrirPainel(new CadastroProdutos(produtoSelecionado));
+            ProdutosController controller = new ProdutosController();
+            Produtos produtoSelecionado = controller.buscarPorId(idProduto);
+            
+            if (produtoSelecionado != null) {
+                dashboard.abrirPainel(new CadastroProdutos(produtoSelecionado));
+            } else {
+                JOptionPane.showMessageDialog(this, "Erro ao carregar dados do produto.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }//GEN-LAST:event_btnCadastrarEditarProdutosActionPerformed
 
@@ -194,23 +201,36 @@ public class GerenciamentoProdutos extends javax.swing.JPanel {
          int linhaSelecionada = tableProdutos.getSelectedRow();
         
         if (linhaSelecionada == -1) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, selecione um produto na tabela para excluir.");
+            JOptionPane.showMessageDialog(this, "Por favor, selecione um produto na tabela para excluir.");
             return;
         }
         
-        int confirmacao = javax.swing.JOptionPane.showConfirmDialog(
+        int confirmacao = JOptionPane.showConfirmDialog(
             this, 
             "Tem certeza que deseja remover este produto do estoque?", 
             "Confirmar Exclusão", 
-            javax.swing.JOptionPane.YES_NO_OPTION
+            JOptionPane.YES_NO_OPTION
         );
         
-        if (confirmacao == javax.swing.JOptionPane.YES_OPTION) {
-            ProdutosController controller = new ProdutosController();
-            controller.listar().remove(linhaSelecionada); // Remove da lista na memória
-            
-            atualizarTabela(); // Atualiza o grid da tela
-            javax.swing.JOptionPane.showMessageDialog(this, "Produto removido com sucesso!");
+        if (confirmacao == JOptionPane.YES_OPTION) {
+            try {
+                // Recupera o ID salvo na Coluna 0 da linha clicada
+                int idProduto = (int) tableProdutos.getValueAt(linhaSelecionada, 0);
+                
+                ProdutosController controller = new ProdutosController();
+                controller.excluir(idProduto); // Exclui no MySQL
+                
+                atualizarTabela(); // Atualiza os dados visíveis
+                JOptionPane.showMessageDialog(this, "Produto removido com sucesso!");
+                
+            } catch (RuntimeException e) {
+                JOptionPane.showMessageDialog(
+                    this, 
+                    "Não foi possível excluir o produto.\nDetalhes: " + e.getMessage(), 
+                    "Erro ao Excluir", 
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
         }
     }//GEN-LAST:event_btnExcluirActionPerformed
 

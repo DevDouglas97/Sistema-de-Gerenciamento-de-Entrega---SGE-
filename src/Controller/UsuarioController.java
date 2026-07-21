@@ -10,14 +10,25 @@ import java.util.ArrayList;
 
 public class UsuarioController {
 
-    UsuarioDAO dao = new UsuarioDAO();
+    private final UsuarioDAO dao = new UsuarioDAO();
 
-    public void salvar(Usuario usuario){
+    public void salvar(Usuario usuario) {
         dao.salvar(usuario);
     }
 
-    public ArrayList<Usuario> listar(){
-        return dao.listar();
+    public void atualizar(Usuario usuario) {
+        dao.atualizar(usuario); // Chama o método de UPDATE do DAO
     }
 
+    public ArrayList<Usuario> listar() {
+        return dao.listar();
+    }
+    
+    public Usuario autenticar(String login, String senha) {
+        return dao.autenticar(login, senha);
+    }
+
+    public void excluir(int id) {
+        dao.excluir(id);
+    }
 }

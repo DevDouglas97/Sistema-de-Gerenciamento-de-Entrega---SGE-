@@ -15,6 +15,8 @@ import PanelProdutos.GerenciamentoProdutos;
  */
 public class Dashboard extends javax.swing.JFrame {
     
+     public static String perfilLogado = "Gerente";
+    
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Dashboard.class.getName());
     public void abrirPainel(javax.swing.JPanel painel) {
 

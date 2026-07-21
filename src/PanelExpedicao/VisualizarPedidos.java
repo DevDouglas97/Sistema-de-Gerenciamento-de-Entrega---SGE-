@@ -3,22 +3,22 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package PanelExpedicao;
-
+import Controller.ExpedicaoController;
 import Model.Expedicao;
 import Model.Produtos;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.table.DefaultTableModel;
 import Telas.Dashboard;
 import javax.swing.SwingUtilities;
+import javax.swing.JOptionPane;
 /**
  *
  * @author devdouglas
  */
 public class VisualizarPedidos extends javax.swing.JPanel {
     private Expedicao pedidoAtual = null;
-    /**
-     * Creates new form VisualizarPedidos
-     */
+    private final ExpedicaoController controller = new ExpedicaoController();
+    
     public VisualizarPedidos() {
         initComponents();
         configurarOpcoesStatus();
@@ -27,23 +27,28 @@ public class VisualizarPedidos extends javax.swing.JPanel {
     public VisualizarPedidos(Expedicao pedido, int numeroPedidoExibicao) {
         initComponents();
         this.pedidoAtual = pedido;
-        
+
         // 1. Configura os status disponíveis no ComboBox
         configurarOpcoesStatus();
-        cbAtualizaStatus.setSelectedItem(pedido.getStatus());
         
+        if (pedido != null && pedido.getStatus() != null) {
+            cbAtualizaStatus.setSelectedItem(pedido.getStatus());
+        }
+
         // 2. Preenche a tabela interna com os itens do pedido
         DefaultTableModel modelo = (DefaultTableModel) tableVisualizadorPedidos.getModel();
         modelo.setRowCount(0);
-        
-        for (Produtos p : pedido.getItensPedido()) {
-            Object[] linha = new Object[]{
-                "#" + numeroPedidoExibicao, // Número do Pedido
-                pedido.getCliente(),         // Cliente
-                p.getNomeProduto(),         // Produto individual
-                p.getQuantidade()           // Quantidade individual
-            };
-            modelo.addRow(linha);
+
+        if (pedido != null && pedido.getItensPedido() != null) {
+            for (Produtos p : pedido.getItensPedido()) {
+                Object[] linha = new Object[]{
+                    "#" + numeroPedidoExibicao, // Número exibido no painel anterior
+                    pedido.getCliente(),        // Nome do cliente
+                    p.getNomeProduto(),         // Produto individual
+                    p.getQuantidade()           // Quantidade
+                };
+                modelo.addRow(linha);
+            }
         }
     }
 
@@ -146,16 +151,35 @@ public class VisualizarPedidos extends javax.swing.JPanel {
     private void btnSalvarSeparacaoPedidoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarSeparacaoPedidoActionPerformed
         // TODO add your handling code here:
         if (this.pedidoAtual != null) {
-            // Atualiza o status do objeto direto na memória ram
-            String novoStatus = cbAtualizaStatus.getSelectedItem().toString();
-            this.pedidoAtual.setStatus(novoStatus);
-            
-            javax.swing.JOptionPane.showMessageDialog(this, "Status do pedido atualizado para: " + novoStatus);
+            try {
+                // 1. Atualiza o status no objeto em memória
+                String novoStatus = cbAtualizaStatus.getSelectedItem().toString();
+                this.pedidoAtual.setStatus(novoStatus);
+
+                // 2. Persiste a alteração no banco de dados via Controller
+                controller.salvar(this.pedidoAtual);
+
+                JOptionPane.showMessageDialog(this,
+                        "Status do pedido atualizado para '" + novoStatus + "' com sucesso!",
+                        "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+                // 3. Retorna ao painel de gerenciamento
+                voltarParaGerenciamento();
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                        "Erro ao atualizar o status do pedido: " + e.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Nenhum pedido foi selecionado para atualização.",
+                    "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
         }
-        
-      
-        Dashboard dashboard = (Dashboard) SwingUtilities.getWindowAncestor(this);
-        dashboard.abrirPainel(new GerenciamentoExpedicao());
+    
     }//GEN-LAST:event_btnSalvarSeparacaoPedidoActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
@@ -163,7 +187,12 @@ public class VisualizarPedidos extends javax.swing.JPanel {
         Dashboard dashboard = (Dashboard) SwingUtilities.getWindowAncestor(this);
         dashboard.abrirPainel(new GerenciamentoExpedicao());
     }//GEN-LAST:event_btnCancelarActionPerformed
-
+    private void voltarParaGerenciamento() {
+        Dashboard dashboard = (Dashboard) SwingUtilities.getWindowAncestor(this);
+        if (dashboard != null) {
+            dashboard.abrirPainel(new GerenciamentoExpedicao());
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancelar;

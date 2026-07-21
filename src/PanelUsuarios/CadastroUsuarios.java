@@ -172,36 +172,51 @@ public class CadastroUsuarios extends javax.swing.JPanel {
     }//GEN-LAST:event_btnCancelarActionPerformed
 
     private void btnSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalvarActionPerformed
-       
+        String nomeUsuario = txtUsuario.getText().trim();
+        String cpf = txtCpf.getText().trim();
+        String senha = new String(txtSenha.getPassword());
+        String confirmarSenha = new String(txtConfirmarSenha.getPassword());
 
-       
-        Usuario usuario;
-        
-        if (this.usuarioExistente == null) {
-           
-            usuario = new Usuario();
-        } else {
-            
-            usuario = this.usuarioExistente;
+        // 1. Validação simples de campos obrigatórios
+        if (nomeUsuario.isEmpty() || cpf.isEmpty() || senha.isEmpty()) {
+            javax.swing.JOptionPane.showMessageDialog(this, 
+                "Preencha todos os campos obrigatórios!", 
+                "Aviso", 
+                javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        
-        
-        usuario.setNome(txtUsuario.getText());
-        usuario.setLogin(txtUsuario.getText()); 
-        usuario.setCpf(txtCpf.getText());
+
+        // 2. Validação de confirmação de senha
+        if (!senha.equals(confirmarSenha)) {
+            javax.swing.JOptionPane.showMessageDialog(this, 
+                "As senhas digitadas não coincidem!", 
+                "Erro", 
+                javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 3. Montagem do Objeto Usuário
+        Usuario usuario = (this.usuarioExistente == null) ? new Usuario() : this.usuarioExistente;
+
+        usuario.setNome(nomeUsuario);
+        usuario.setLogin(nomeUsuario); 
+        usuario.setCpf(cpf);
         usuario.setPerfil(cbPerfil.getSelectedItem().toString());
-        usuario.setSenha(new String(txtSenha.getPassword()));
-        usuario.setAtivo(true);
-        
-        
+        usuario.setSenha(senha);
+        usuario.setAtivo(true); // Garante que o usuário é salvo como ATIVO (1)
+
+        // 4. Gravação no Banco (Salvar Novo vs Atualizar Existente)
+        Controller.UsuarioController controller = new Controller.UsuarioController();
+
         if (this.usuarioExistente == null) {
-            Controller.UsuarioController controller = new Controller.UsuarioController();
-            controller.salvar(usuario);
+            controller.salvar(usuario); // INSERT no MySQL
+        } else {
+            controller.atualizar(usuario); // UPDATE no MySQL (necessário criar no Controller/DAO caso não exista)
         }
-        
+
         javax.swing.JOptionPane.showMessageDialog(this, "Dados gravados com sucesso!");
-        
-        
+
+        // 5. Redireciona de volta para a lista atualizada
         Telas.Dashboard dashboard = (Telas.Dashboard) javax.swing.SwingUtilities.getWindowAncestor(this);
         dashboard.abrirPainel(new GerenciamentoUsuarios());
     }//GEN-LAST:event_btnSalvarActionPerformed

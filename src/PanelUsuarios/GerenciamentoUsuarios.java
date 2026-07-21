@@ -22,24 +22,31 @@ public class GerenciamentoUsuarios extends javax.swing.JPanel {
      */
     public GerenciamentoUsuarios() {
         initComponents();
-        atualizarTabela();
+        tableUsuariosCadastrados.setRowSelectionAllowed(true);
+        
+        // CORREÇÃO OBRIGATÓRIA: Limpa as 4 linhas fantasmas padrão do NetBeans
+        DefaultTableModel modelo = (DefaultTableModel) tableUsuariosCadastrados.getModel();
+        modelo.setRowCount(0); 
+        
+        atualizarTabela(); // Agora sim, busca e desenha os dados reais do banco
     }
     
     public final void atualizarTabela() {
-        DefaultTableModel modelo = (DefaultTableModel) tableUsuariosCadastrados.getModel();
-        modelo.setRowCount(0);
-        UsuarioController controller = new UsuarioController();
-        ArrayList<Usuario> listaUsuarios = controller.listar();
-        for (Usuario usuario : listaUsuarios) {
-            Object[] linha = new Object[]{
-                usuario.getNome(),  
-                usuario.getCpf(),   
-                usuario.getPerfil()
-            };
-            modelo.addRow(linha);
-        }
-        
+    DefaultTableModel modelo = (DefaultTableModel) tableUsuariosCadastrados.getModel();
+    modelo.setRowCount(0);
+    UsuarioController controller = new UsuarioController();
+    ArrayList<Usuario> listaUsuarios = controller.listar();
+    
+    for (Usuario usuario : listaUsuarios) {
+        Object[] linha = new Object[]{
+            usuario.getId(),    // <--- COLUNA 0: Agora é o ID (Integer)
+            usuario.getNome(),  // Coluna 1: Nome
+            usuario.getCpf(),   // Coluna 2: CPF
+            usuario.getPerfil() // Coluna 3: Perfil
+        };
+        modelo.addRow(linha);
     }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -75,7 +82,16 @@ public class GerenciamentoUsuarios extends javax.swing.JPanel {
 
         tableUsuariosCadastrados.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
             },
             new String [] {
                 "Usuário", "CPF", "Perfil"
@@ -159,32 +175,24 @@ public class GerenciamentoUsuarios extends javax.swing.JPanel {
     private void ExcluirUsuariobtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ExcluirUsuariobtnActionPerformed
         // TODO add your handling code here:
         int linhaSelecionada = tableUsuariosCadastrados.getSelectedRow();
-        
+    
         if (linhaSelecionada == -1) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, selecione um usuário na tabela para excluir.");
+            javax.swing.JOptionPane.showMessageDialog(this, "Selecione um usuário!");
             return;
         }
-        
-        
+
         int confirmacao = javax.swing.JOptionPane.showConfirmDialog(
-            this, 
-            "Tem certeza que deseja excluir este usuário?", 
-            "Confirmar Exclusão", 
-            javax.swing.JOptionPane.YES_NO_OPTION
-        );
-        
-        
+            this, "Tem certeza?", "Confirmar", javax.swing.JOptionPane.YES_NO_OPTION);
+
         if (confirmacao == javax.swing.JOptionPane.YES_OPTION) {
-            
-            Controller.UsuarioController controller = new Controller.UsuarioController();
-            
-            
-            controller.listar().remove(linhaSelecionada);
-            
-            
+            // Pega o ID da coluna oculta
+            int id = (int) tableUsuariosCadastrados.getValueAt(linhaSelecionada, 0);
+
+            UsuarioController controller = new UsuarioController();
+            controller.excluir(id);  // Método novo que chama o DAO
+
             atualizarTabela();
-            
-            javax.swing.JOptionPane.showMessageDialog(this, "Usuário excluído com sucesso!");
+            javax.swing.JOptionPane.showMessageDialog(this, "Excluído com sucesso!");
         }
     }//GEN-LAST:event_ExcluirUsuariobtnActionPerformed
 

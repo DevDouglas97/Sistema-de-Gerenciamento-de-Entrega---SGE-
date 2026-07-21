@@ -9,6 +9,8 @@ import Model.Cliente;
 import java.util.ArrayList;
 import Telas.Dashboard;
 import javax.swing.SwingUtilities;
+import javax.swing.JOptionPane;
+
 
 /**
  *
@@ -139,19 +141,24 @@ public class GerenciamentoClientes extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCadastrarEditarClienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCadastrarEditarClienteActionPerformed
-        // TODO add your handling code here:
-        int linhaSelecionada = TableClientes.getSelectedRow();
+       int linhaSelecionada = TableClientes.getSelectedRow();
         Dashboard dashboard = (Dashboard) SwingUtilities.getWindowAncestor(this);
         
         if (linhaSelecionada == -1) {
-            // Nenhuma linha selecionada: Abre o cadastro em branco
+            // Nenhuma linha selecionada: Abre o formulário em branco para novo cadastro
             dashboard.abrirPainel(new CadastroClientes());
         } else {
-            // Linha selecionada: Busca o cliente na memória e abre o construtor de edição
-            ClienteController controller = new ClienteController();
-            Cliente clienteSelecionado = controller.listar().get(linhaSelecionada);
+            // Pega o ID diretamente da primeira coluna da linha selecionada
+            int idCliente = (int) TableClientes.getValueAt(linhaSelecionada, 0);
             
-            dashboard.abrirPainel(new CadastroClientes(clienteSelecionado));
+            ClienteController controller = new ClienteController();
+            Cliente clienteSelecionado = controller.buscarPorId(idCliente);
+            
+            if (clienteSelecionado != null) {
+                dashboard.abrirPainel(new CadastroClientes(clienteSelecionado));
+            } else {
+                JOptionPane.showMessageDialog(this, "Erro ao carregar dados do cliente.");
+            }
         }
     }//GEN-LAST:event_btnCadastrarEditarClienteActionPerformed
 

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Controller;
 
 import DAO.ProdutosDAO;
@@ -10,14 +6,39 @@ import java.util.ArrayList;
 
 public class ProdutosController {
 
-    private ProdutosDAO dao = new ProdutosDAO();
+    private final ProdutosDAO dao = new ProdutosDAO();
 
+    /**
+     * Identifica se é um novo registro ou edição:
+     * - Se o id for maior que 0, chama o UPDATE (atualizar).
+     * - Se o id for 0, chama o INSERT (salvar).
+     */
     public void salvar(Produtos produto) {
-        dao.salvar(produto);
+        if (produto.getId() > 0) {
+            dao.atualizar(produto);
+        } else {
+            dao.salvar(produto);
+        }
     }
 
+    /**
+     * Retorna a lista de produtos gravados no banco de dados.
+     */
     public ArrayList<Produtos> listar() {
         return dao.listar();
     }
-}
 
+    /**
+     * Busca um produto específico pelo ID.
+     */
+    public Produtos buscarPorId(int id) {
+        return dao.buscarPorId(id);
+    }
+
+    /**
+     * Remove um produto do banco de dados pelo ID.
+     */
+    public void excluir(int id) {
+        dao.excluir(id);
+    }
+}
