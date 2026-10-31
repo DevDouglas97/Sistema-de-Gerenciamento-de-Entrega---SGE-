@@ -10,7 +10,18 @@ import java.util.ArrayList;
 
 public class RotasController {
 
-    private final RotasDAO dao = new RotasDAO();
+    private final RotasDAO dao;
+
+    public RotasController() {
+        this(new RotasDAO());
+    }
+
+    /**
+     * Construtor para testes: permite injetar um DAO falso sem acessar o banco.
+     */
+    RotasController(RotasDAO dao) {
+        this.dao = dao;
+    }
 
     /**
      * Valida os dados da rota e salva no banco de dados.
@@ -65,10 +76,16 @@ public class RotasController {
         if (rota == null) {
             throw new IllegalArgumentException("A rota não pode ser nula.");
         }
-        if (rota.getPedidoDisplay() == null || rota.getPedidoDisplay().trim().isEmpty()) {
+        // Aceita o vínculo por ID (preferencial) ou pelo texto (compatibilidade).
+        boolean pedidoValido = rota.getExpedicaoId() > 0
+                || (rota.getPedidoDisplay() != null && !rota.getPedidoDisplay().trim().isEmpty());
+        if (!pedidoValido) {
             throw new IllegalArgumentException("O pedido vinculado é obrigatório.");
         }
-        if (rota.getEnderecoEntrega() == null || rota.getEnderecoEntrega().trim().isEmpty()) {
+
+        boolean enderecoValido = rota.getEnderecoId() > 0
+                || (rota.getEnderecoEntrega() != null && !rota.getEnderecoEntrega().trim().isEmpty());
+        if (!enderecoValido) {
             throw new IllegalArgumentException("O endereço de entrega é obrigatório.");
         }
         if (rota.getStatus() == null || rota.getStatus().trim().isEmpty()) {

@@ -7,6 +7,8 @@ package Model;
 public class Rotas {
 
     private int id;
+    private int expedicaoId;
+    private int enderecoId;
     private String pedidoDisplay; // Guarda a identificação do pedido (ex: "#1")
     private String cliente;
     private String motorista;
@@ -34,6 +36,22 @@ public class Rotas {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getExpedicaoId() {
+        return expedicaoId;
+    }
+
+    public void setExpedicaoId(int expedicaoId) {
+        this.expedicaoId = expedicaoId;
+    }
+
+    public int getEnderecoId() {
+        return enderecoId;
+    }
+
+    public void setEnderecoId(int enderecoId) {
+        this.enderecoId = enderecoId;
     }
 
     public String getPedidoDisplay() {

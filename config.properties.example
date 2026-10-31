@@ -1,0 +1,15 @@
+# ============================================================
+# SGE - Configuração do banco de dados
+#
+# Copie este arquivo para "config.properties" e ajuste os valores.
+# O arquivo config.properties NÃO deve ser versionado (está no .gitignore).
+#
+# Alternativas (têm prioridade sobre este arquivo):
+#   Variáveis de ambiente : SGE_DB_URL, SGE_DB_USUARIO, SGE_DB_SENHA, SGE_DB_DRIVER
+#   Propriedades da JVM  : -Ddb.url=... -Ddb.usuario=... -Ddb.senha=...
+# ============================================================
+
+db.url=jdbc:mysql://localhost:3306/sge?useTimezone=true&serverTimezone=UTC
+db.usuario=root
+db.senha=
+db.driver=com.mysql.cj.jdbc.Driver

@@ -17,6 +17,8 @@ import Controller.EnderecoController;
  */
 public class CadastroEnderecos extends javax.swing.JPanel {
     private Model.Endereco enderecoExistente = null;
+    // Mantém os objetos na mesma ordem do ComboBox para recuperar o ID real.
+    private final ArrayList<Cliente> clientesCombo = new ArrayList<>();
     /**
      * Creates new form CadastroEnderecos
      */
@@ -36,8 +38,10 @@ public class CadastroEnderecos extends javax.swing.JPanel {
         modeloCombo.addElement("Selecione um Cliente...");
         
         // 4. Percorre a lista de clientes cadastrados e adiciona o nome de cada empresa no combo
+        clientesCombo.clear();
         for (Cliente cliente : listaClientes) {
             modeloCombo.addElement(cliente.getNomeEmpresa());
+            clientesCombo.add(cliente);
         }
         
         // 5. Aplica o novo modelo preenchido ao seu ComboBox da tela
@@ -204,17 +208,17 @@ public class CadastroEnderecos extends javax.swing.JPanel {
         }
 
         
+        Cliente clienteSelecionado = clientesCombo.get(indiceSelecionado - 1);
+        enderecoObj.setClienteId(clienteSelecionado.getId());
         enderecoObj.setCliente(cbSelecioneCliente.getSelectedItem().toString());
         enderecoObj.setDescricao(txtDescricao.getText().trim());
         enderecoObj.setEndereco(txtEndereco.getText().trim());
         enderecoObj.setBairro(txtBairro.getText().trim());
         enderecoObj.setCidadeUf(txtCidadeUf.getText().trim());
 
-        
-        if (this.enderecoExistente == null) {
-            Controller.EnderecoController controller = new Controller.EnderecoController();
-            controller.salvar(enderecoObj);
-        }
+        // O controller decide entre INSERT e UPDATE usando o id do objeto.
+        Controller.EnderecoController controller = new Controller.EnderecoController();
+        controller.salvar(enderecoObj);
 
         
         javax.swing.JOptionPane.showMessageDialog(this, "Endereço gravado com sucesso!");

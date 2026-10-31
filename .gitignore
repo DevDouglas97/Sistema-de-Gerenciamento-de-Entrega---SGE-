@@ -3,3 +3,7 @@ nbproject/private/
 dist/
 nbbuild/
 nbdist/
+
+# Credenciais locais do banco de dados (nunca versionar)
+config.properties
+config.properties

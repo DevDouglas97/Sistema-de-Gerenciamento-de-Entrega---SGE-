@@ -7,6 +7,7 @@ package Model;
 public class Produtos {
 
     private int id;
+    private int clienteId;
     private String cliente; 
     private String nomeProduto;
     private int quantidade; 
@@ -34,6 +35,14 @@ public class Produtos {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(int clienteId) {
+        this.clienteId = clienteId;
     }
 
     public String getCliente() {

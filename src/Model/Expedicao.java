@@ -9,6 +9,8 @@ import java.util.ArrayList;
 public class Expedicao {
 
     private int id;
+    private int clienteId;
+    private int motoristaId;
     private String cliente;
     private String motorista;
     private String status = "Aguardando";
@@ -35,6 +37,22 @@ public class Expedicao {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getClienteId() {
+        return clienteId;
+    }
+
+    public void setClienteId(int clienteId) {
+        this.clienteId = clienteId;
+    }
+
+    public int getMotoristaId() {
+        return motoristaId;
+    }
+
+    public void setMotoristaId(int motoristaId) {
+        this.motoristaId = motoristaId;
     }
 
     public String getCliente() {

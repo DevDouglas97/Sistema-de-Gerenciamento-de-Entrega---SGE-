@@ -19,6 +19,13 @@ import javax.swing.DefaultComboBoxModel;
  */
 public class CadastrarPedido extends javax.swing.JPanel {
 
+    // Mantêm os objetos na ordem dos ComboBox para recuperar os IDs reais.
+    private final ArrayList<Cliente> clientesCombo = new ArrayList<>();
+    private final ArrayList<Usuario> motoristasCombo = new ArrayList<>();
+    private final ArrayList<Produtos> produtosCombo = new ArrayList<>();
+    // ID do produto de cada linha da tabela, na mesma ordem.
+    private final ArrayList<Integer> idsProdutosPedido = new ArrayList<>();
+
     /**
      * Creates new form CadastrarPedido
      */
@@ -37,8 +44,10 @@ public class CadastrarPedido extends javax.swing.JPanel {
         DefaultComboBoxModel<String> modeloCombo = new DefaultComboBoxModel<>();
         modeloCombo.addElement("Selecione um Cliente...");
         
+        clientesCombo.clear();
         for (Cliente cliente : listaClientes) {
             modeloCombo.addElement(cliente.getNomeEmpresa());
+            clientesCombo.add(cliente);
         }
         cbSelecionaCliente.setModel(modeloCombo);
     }
@@ -51,10 +60,12 @@ public class CadastrarPedido extends javax.swing.JPanel {
         DefaultComboBoxModel<String> modeloCombo = new DefaultComboBoxModel<>();
         modeloCombo.addElement("Selecione um Motorista...");
         
+        motoristasCombo.clear();
         for (Usuario usuario : listaUsuarios) {
             
             if ("Motorista".equalsIgnoreCase(usuario.getPerfil())) {
                 modeloCombo.addElement(usuario.getNome());
+                motoristasCombo.add(usuario);
             }
         }
         cbSelecionaMotorista.setModel(modeloCombo);
@@ -68,8 +79,10 @@ public class CadastrarPedido extends javax.swing.JPanel {
         DefaultComboBoxModel<String> modeloCombo = new DefaultComboBoxModel<>();
         modeloCombo.addElement("Selecione um Produto...");
         
+        produtosCombo.clear();
         for (Produtos produto : listaProdutos) {
             modeloCombo.addElement(produto.getNomeProduto());
+            produtosCombo.add(produto);
         }
         cbSelecionaProduto.setModel(modeloCombo);
     }
@@ -238,6 +251,9 @@ public class CadastrarPedido extends javax.swing.JPanel {
         
         javax.swing.table.DefaultTableModel modeloTabela = (javax.swing.table.DefaultTableModel) tableProdutosPedidosAdc.getModel();
         modeloTabela.removeRow(linhaSelecionada);
+        if (linhaSelecionada < idsProdutosPedido.size()) {
+            idsProdutosPedido.remove(linhaSelecionada);
+        }
     }//GEN-LAST:event_btnExcluiProdutoPedidoActionPerformed
 
     private void btnCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelarActionPerformed
@@ -269,7 +285,11 @@ public class CadastrarPedido extends javax.swing.JPanel {
 
         
         Model.Expedicao novoPedido = new Model.Expedicao();
+        Cliente clienteSelecionado = clientesCombo.get(cbSelecionaCliente.getSelectedIndex() - 1);
+        Usuario motoristaSelecionado = motoristasCombo.get(cbSelecionaMotorista.getSelectedIndex() - 1);
+        novoPedido.setClienteId(clienteSelecionado.getId());
         novoPedido.setCliente(cbSelecionaCliente.getSelectedItem().toString());
+        novoPedido.setMotoristaId(motoristaSelecionado.getId());
         novoPedido.setMotorista(cbSelecionaMotorista.getSelectedItem().toString());
         novoPedido.setStatus("Aguardando"); // Atribuição automática exigida por padrão
 
@@ -282,6 +302,9 @@ public class CadastrarPedido extends javax.swing.JPanel {
             
           
             Model.Produtos item = new Model.Produtos();
+            if (i < idsProdutosPedido.size() && idsProdutosPedido.get(i) != null) {
+                item.setId(idsProdutosPedido.get(i));
+            }
             item.setQuantidade(qtd);
             item.setNomeProduto(nomeProd);
             item.setUnidade(unidade);
@@ -330,17 +353,11 @@ public class CadastrarPedido extends javax.swing.JPanel {
             return;
         }
 
-        // 4. DESCOBRIR A UNIDADE DO PRODUTO (Buscando no controlador de produtos)
+        // 4. DESCOBRIR A UNIDADE E O ID DO PRODUTO SELECIONADO
         String produtoNome = cbSelecionaProduto.getSelectedItem().toString();
-        String unidadeMedida = "UN"; // Valor padrão caso não encontre
-        
-        Controller.ProdutosController produtosController = new Controller.ProdutosController();
-        for (Model.Produtos p : produtosController.listar()) {
-            if (p.getNomeProduto().equalsIgnoreCase(produtoNome)) {
-                unidadeMedida = p.getUnidade(); // Captura a unidade real cadastrada (KG, CX, UN...)
-                break;
-            }
-        }
+        Model.Produtos produtoSelecionado = produtosCombo.get(cbSelecionaProduto.getSelectedIndex() - 1);
+        String unidadeMedida = produtoSelecionado.getUnidade() == null
+                ? "UN" : produtoSelecionado.getUnidade();
 
         // 5. INSERIR A LINHA DENTRO DA JTABLE DA TELA
         javax.swing.table.DefaultTableModel modeloTabela = (javax.swing.table.DefaultTableModel) tableProdutosPedidosAdc.getModel();
@@ -352,6 +369,7 @@ public class CadastrarPedido extends javax.swing.JPanel {
         };
         
         modeloTabela.addRow(novaLinha);
+        idsProdutosPedido.add(produtoSelecionado.getId());
 
         // 6. LIMPAR E PREPARAR O CAMPO PARA O PRÓXIMO PRODUTO
         txtQuantidadeProdutosPedidos.setText("");

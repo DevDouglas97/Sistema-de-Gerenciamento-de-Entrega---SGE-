@@ -49,7 +49,11 @@ public class VisualizarRota extends javax.swing.JPanel {
 
             EnderecoController enderecoController = new EnderecoController();
             for (Endereco end : enderecoController.listar()) {
-                if (end.getEndereco() != null && end.getEndereco().equalsIgnoreCase(rota.getEnderecoEntrega())) {
+                boolean encontrado = rota.getEnderecoId() > 0
+                        ? end.getId() == rota.getEnderecoId()
+                        : (end.getEndereco() != null
+                            && end.getEndereco().equalsIgnoreCase(rota.getEnderecoEntrega()));
+                if (encontrado) {
                     descricaoEndereco = end.getDescricao();
                     cidadeUfEndereco = end.getCidadeUf();
                     break;

@@ -9,6 +9,7 @@ import PanelExpedicao.GerenciamentoExpedicao;
 import PanelRotas.GerenciamentoRotas;
 import PanelEnderecos.GerenciamentoEnderecos;
 import PanelProdutos.GerenciamentoProdutos;
+import Util.PermissaoUtil;
 /**
  *
  * @author devdouglas
@@ -33,6 +34,21 @@ public class Dashboard extends javax.swing.JFrame {
      */
     public Dashboard() {
         initComponents();
+        aplicarPermissoes();
+    }
+
+    /**
+     * Esconde os módulos que o perfil logado não pode acessar.
+     * A regra fica em PermissaoUtil para poder ser testada sem GUI.
+     */
+    private void aplicarPermissoes() {
+        Usuariosbtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.USUARIOS));
+        Clientesbtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.CLIENTES));
+        Produtosbtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.PRODUTOS));
+        Enderecobtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.ENDERECOS));
+        Expedicaobtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.EXPEDICAO));
+        Rotabtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.ROTAS));
+        Dashboardbtn.setVisible(PermissaoUtil.podeAcessar(perfilLogado, PermissaoUtil.Modulo.DASHBOARD));
     }
 
     /**

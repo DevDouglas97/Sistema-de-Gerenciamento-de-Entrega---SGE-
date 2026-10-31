@@ -20,7 +20,10 @@ import Model.Endereco;
  * @author devdouglas
  */
 public class CadastrarRotas extends javax.swing.JPanel {
-    private Model.Rotas rotaExistente = null; 
+    private Model.Rotas rotaExistente = null;
+    // Mantém os objetos na ordem dos ComboBox para recuperar os IDs reais.
+    private final ArrayList<Expedicao> pedidosCombo = new ArrayList<>();
+    private final ArrayList<Endereco> enderecosCombo = new ArrayList<>();
     /**
      * Ao selecionar o pedido os dados de cliente e motorista deve ser preenchido automaticamento com os dados
      * inseridos na expedição, neste painel deve ser possível selecionar apenas o endereço de entrega
@@ -46,14 +49,14 @@ public class CadastrarRotas extends javax.swing.JPanel {
         
         DefaultComboBoxModel<String> modeloCombo = new DefaultComboBoxModel<>();
         modeloCombo.addElement("Selecione um Pedido...");
-        
-        int numeroPedido = 1;
+
+        pedidosCombo.clear();
         for (Expedicao exp : listaPedidos) {
-            // Mostra o número sequencial e o cliente do pedido para facilitar a escolha
-            modeloCombo.addElement("Pedido #" + numeroPedido + " - " + exp.getCliente());
-            numeroPedido++;
+            // Usa o ID real do banco (e não um contador visual) para o vínculo da rota.
+            modeloCombo.addElement("Pedido #" + exp.getId() + " - " + exp.getCliente());
+            pedidosCombo.add(exp);
         }
-        
+
         cbSelecionaPedido.setModel(modeloCombo);
     }
     /**
@@ -195,25 +198,27 @@ public class CadastrarRotas extends javax.swing.JPanel {
         Model.Rotas rotaObj;
         if (this.rotaExistente == null) {
             rotaObj = new Model.Rotas(); // Nova Rota
-            
-            
-            String textoCombo = cbSelecionaPedido.getSelectedItem().toString();
-            String pedidoDisplay = textoCombo.split(" - ")[0]; 
-            
-            rotaObj.setPedidoDisplay(pedidoDisplay);
+
+            Expedicao pedidoSelecionado = pedidosCombo.get(cbSelecionaPedido.getSelectedIndex() - 1);
+            Endereco enderecoSelecionado = enderecosCombo.get(cbSelecionaEndereco.getSelectedIndex() - 1);
+
+            rotaObj.setExpedicaoId(pedidoSelecionado.getId());
+            rotaObj.setPedidoDisplay("#" + pedidoSelecionado.getId());
             rotaObj.setCliente(txtCliente.getText());
             rotaObj.setMotorista(txtMotorista.getText());
-            rotaObj.setEnderecoEntrega(cbSelecionaEndereco.getSelectedItem().toString());
+            rotaObj.setEnderecoId(enderecoSelecionado.getId());
+            rotaObj.setEnderecoEntrega(enderecoSelecionado.getEndereco());
             rotaObj.setStatus("Pendente"); // Regra de negócio: nascer automático como Pendente
         } else {
             rotaObj = this.rotaExistente; // Edita a rota existente
             rotaObj.setStatus(cbStatusEntrega.getSelectedItem().toString()); // Atualiza o status escolhido
         }
 
-        
+        Controller.RotasController controller = new Controller.RotasController();
         if (this.rotaExistente == null) {
-            Controller.RotasController controller = new Controller.RotasController();
             controller.salvar(rotaObj);
+        } else {
+            controller.atualizar(rotaObj);
         }
 
         
@@ -235,47 +240,7 @@ public class CadastrarRotas extends javax.swing.JPanel {
     }//GEN-LAST:event_cbStatusEntregaActionPerformed
 
     private void cbSelecionaEnderecoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbSelecionaEnderecoActionPerformed
-        // TODO add your handling code here:
-        int indiceSelecionado = cbSelecionaPedido.getSelectedIndex();
-        
-        // Se selecionou a opção em branco ou instrução, limpa tudo
-        if (indiceSelecionado <= 0) {
-            txtCliente.setText("");
-            txtMotorista.setText("");
-            cbSelecionaEndereco.setModel(new DefaultComboBoxModel<>(new String[] { " " }));
-            return;
-        }
-        
-        int indiceRealNoDAO = indiceSelecionado - 1;
-        
-        ExpedicaoController expedicaoController = new ExpedicaoController();
-        Expedicao pedidoSelecionado = expedicaoController.listar().get(indiceRealNoDAO);
-        
-        // 1. Preenche os campos de texto automáticos
-        String nomeCliente = pedidoSelecionado.getCliente();
-        txtCliente.setText(nomeCliente);
-        txtMotorista.setText(pedidoSelecionado.getMotorista());
-        
-        // 2. FILTRAGEM DINÂMICA DE ENDEREÇOS DO CLIENTE
-        EnderecoController enderecoController = new EnderecoController();
-        ArrayList<Endereco> todosEnderecos = enderecoController.listar();
-        
-        DefaultComboBoxModel<String> modeloEndereco = new DefaultComboBoxModel<>();
-        modeloEndereco.addElement("Selecione o Endereço de Entrega...");
-        
-        // Percorre todos os endereços e adiciona apenas os que são do cliente selecionado
-        for (Endereco end : todosEnderecos) {
-            if (end.getCliente().equalsIgnoreCase(nomeCliente)) {
-                // Mostra a descrição e o endereço físico (Ex: "Filial - Rua das Flores, 123")
-                modeloEndereco.addElement(end.getDescricao() + " - " + end.getEndereco());
-                
-                // Nota: Se na sua classe Endereco.java o campo de texto da rua se chamar "getEndereco()", mude para:
-                // modeloEndereco.addElement(end.getDescricao() + " - " + end.getEndereco());
-            }
-        }
-        
-        // 3. Aplica os endereços filtrados no ComboBox da tela
-        cbSelecionaEndereco.setModel(modeloEndereco);
+        // Nada a fazer: a lista de endereços é recarregada ao escolher o pedido.
     }//GEN-LAST:event_cbSelecionaEnderecoActionPerformed
 
     private void txtMotoristaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtMotoristaActionPerformed
@@ -287,26 +252,42 @@ public class CadastrarRotas extends javax.swing.JPanel {
     }//GEN-LAST:event_txtClienteActionPerformed
 
     private void cbSelecionaPedidoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbSelecionaPedidoActionPerformed
-        // TODO add your handling code here:
         int indiceSelecionado = cbSelecionaPedido.getSelectedIndex();
-        
+
+        txtCliente.setText("");
+        txtMotorista.setText("");
+        enderecosCombo.clear();
+
+        DefaultComboBoxModel<String> modeloEndereco = new DefaultComboBoxModel<>();
+        modeloEndereco.addElement("Selecione o Endereço de Entrega...");
+
         // Se selecionou a primeira opção ("Selecione um Pedido...") ou nada, limpa os campos
         if (indiceSelecionado <= 0) {
-            txtCliente.setText("");
-            txtMotorista.setText("");
-            cbSelecionaEndereco.setModel(new DefaultComboBoxModel<>(new String[] { " " }));
+            cbSelecionaEndereco.setModel(modeloEndereco);
             return;
         }
-        
-        // Como o índice 0 é a mensagem informativa, o pedido real na lista do DAO está na posição (indice - 1)
-        int indiceRealNoDAO = indiceSelecionado - 1;
-        
-        ExpedicaoController expedicaoController = new ExpedicaoController();
-        Expedicao pedidoSelecionado = expedicaoController.listar().get(indiceRealNoDAO);
-        
+
+        Expedicao pedidoSelecionado = pedidosCombo.get(indiceSelecionado - 1);
+
         // Preenche automaticamente as caixas de texto com os dados da expedição
         txtCliente.setText(pedidoSelecionado.getCliente());
         txtMotorista.setText(pedidoSelecionado.getMotorista());
+
+        // Filtra os endereços do cliente pelo ID (fallback por nome para dados antigos)
+        EnderecoController enderecoController = new EnderecoController();
+        for (Endereco end : enderecoController.listar()) {
+            boolean mesmoCliente = pedidoSelecionado.getClienteId() > 0
+                    ? end.getClienteId() == pedidoSelecionado.getClienteId()
+                    : (end.getCliente() != null
+                        && end.getCliente().equalsIgnoreCase(pedidoSelecionado.getCliente()));
+
+            if (mesmoCliente) {
+                modeloEndereco.addElement(end.getDescricao() + " - " + end.getEndereco());
+                enderecosCombo.add(end);
+            }
+        }
+
+        cbSelecionaEndereco.setModel(modeloEndereco);
     }//GEN-LAST:event_cbSelecionaPedidoActionPerformed
 
 

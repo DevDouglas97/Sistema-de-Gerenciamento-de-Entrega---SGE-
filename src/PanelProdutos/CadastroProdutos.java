@@ -17,6 +17,8 @@ import Controller.ProdutosController;
  */
 public class CadastroProdutos extends javax.swing.JPanel {
     private Model.Produtos produtoExistente = null;
+    // Mantém os objetos na mesma ordem do ComboBox para recuperar o ID real.
+    private final ArrayList<Cliente> clientesCombo = new ArrayList<>();
     /**
      * Creates new form CadastroProdutos
      */
@@ -35,8 +37,10 @@ public class CadastroProdutos extends javax.swing.JPanel {
         modeloCombo.addElement("Selecione um Cliente...");
         
         
+        clientesCombo.clear();
         for (Cliente cliente : listaClientes) {
             modeloCombo.addElement(cliente.getNomeEmpresa());
+            clientesCombo.add(cliente);
         }
         
         
@@ -229,17 +233,17 @@ public class CadastroProdutos extends javax.swing.JPanel {
         }
 
         
+        Cliente clienteSelecionado = clientesCombo.get(cbSelecionaCliente.getSelectedIndex() - 1);
+        produtoObj.setClienteId(clienteSelecionado.getId());
         produtoObj.setCliente(cbSelecionaCliente.getSelectedItem().toString());
         produtoObj.setNomeProduto(txtNomeProduto.getText().trim());
         produtoObj.setQuantidade(quantidadeConvertida);
         produtoObj.setUnidade(cbTipoUnidadeProduto.getSelectedItem().toString());
         produtoObj.setCategoria(cbCategoriaProduto.getSelectedItem().toString());
 
-       
-        if (this.produtoExistente == null) {
-            Controller.ProdutosController controller = new Controller.ProdutosController();
-            controller.salvar(produtoObj);
-        }
+        // O controller decide entre INSERT e UPDATE usando o id do objeto.
+        Controller.ProdutosController controller = new Controller.ProdutosController();
+        controller.salvar(produtoObj);
 
         
         javax.swing.JOptionPane.showMessageDialog(this, "Produto gravado com sucesso!");

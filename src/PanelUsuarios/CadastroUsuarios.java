@@ -23,16 +23,18 @@ public class CadastroUsuarios extends javax.swing.JPanel {
         initComponents();
         this.usuarioExistente = usuario; // Guarda o usuário que veio da tabela
         
-        // Preenche os campos da tela com os dados atuais do usuário
+        // Preenche os campos da tela com os dados atuais do usuário.
+        // A senha não é carregada: ela fica armazenada como hash e não deve
+        // ser exibida. Deixe os campos em branco para mantê-la.
         txtUsuario.setText(usuario.getNome());
         txtCpf.setText(usuario.getCpf());
         cbPerfil.setSelectedItem(usuario.getPerfil());
-        txtSenha.setText(usuario.getSenha());
-        txtConfirmarSenha.setText(usuario.getSenha());
-        
+
         // Altera o texto do título e do botão para ficar correto
         jLabel1.setText("EDIÇÃO DE USUÁRIO");
         btnSalvar.setText("ATUALIZAR");
+        txtSenha.setToolTipText("Deixe em branco para manter a senha atual");
+        txtConfirmarSenha.setToolTipText("Deixe em branco para manter a senha atual");
     }
 
     /**
@@ -177,8 +179,11 @@ public class CadastroUsuarios extends javax.swing.JPanel {
         String senha = new String(txtSenha.getPassword());
         String confirmarSenha = new String(txtConfirmarSenha.getPassword());
 
-        // 1. Validação simples de campos obrigatórios
-        if (nomeUsuario.isEmpty() || cpf.isEmpty() || senha.isEmpty()) {
+        boolean editando = this.usuarioExistente != null;
+
+        // 1. Validação simples de campos obrigatórios.
+        // Na edição a senha pode ficar em branco (mantém a atual).
+        if (nomeUsuario.isEmpty() || cpf.isEmpty() || (!editando && senha.isEmpty())) {
             javax.swing.JOptionPane.showMessageDialog(this, 
                 "Preencha todos os campos obrigatórios!", 
                 "Aviso", 
@@ -186,8 +191,8 @@ public class CadastroUsuarios extends javax.swing.JPanel {
             return;
         }
 
-        // 2. Validação de confirmação de senha
-        if (!senha.equals(confirmarSenha)) {
+        // 2. Validação de confirmação de senha (somente quando uma nova senha foi digitada)
+        if (!senha.isEmpty() && !senha.equals(confirmarSenha)) {
             javax.swing.JOptionPane.showMessageDialog(this, 
                 "As senhas digitadas não coincidem!", 
                 "Erro", 
@@ -202,7 +207,8 @@ public class CadastroUsuarios extends javax.swing.JPanel {
         usuario.setLogin(nomeUsuario); 
         usuario.setCpf(cpf);
         usuario.setPerfil(cbPerfil.getSelectedItem().toString());
-        usuario.setSenha(senha);
+        // null/"" faz o DAO manter a senha atual no UPDATE (não sobrescreve com hash vazio)
+        usuario.setSenha(senha.isEmpty() ? null : senha);
         usuario.setAtivo(true); // Garante que o usuário é salvo como ATIVO (1)
 
         // 4. Gravação no Banco (Salvar Novo vs Atualizar Existente)
